@@ -1,0 +1,8 @@
+packages:
+  "framer-motion": "For smooth scroll-triggered animations and entry effects"
+  "clsx": "For merging class names in reusable components"
+  "tailwind-merge": "For conflict-free tailwind class merging in UI components"
+
+notes:
+  - This is a static frontend landing page with hardcoded data.
+  - Smooth scrolling relies on standard HTML anchor links to section IDs.

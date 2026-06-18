@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Playfair Display', serif;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+:root {
+  /* Dark Espresso + Golden Amber Palette — inspired by NOTO brand */
+
+  /* Deep dark espresso background */
+  --background: 25 18% 8%;
+  /* Warm cream foreground */
+  --foreground: 42 35% 90%;
+
+  /* Slightly lighter dark for cards */
+  --card: 25 16% 12%;
+  --card-foreground: 42 35% 90%;
+
+  --popover: 25 16% 12%;
+  --popover-foreground: 42 35% 90%;
+
+  /* Golden amber — brand primary (from logo) */
+  --primary: 42 78% 58%;
+  --primary-foreground: 25 20% 8%;
+
+  /* Warm olive secondary */
+  --secondary: 25 14% 20%;
+  --secondary-foreground: 42 35% 90%;
+
+  /* Dark muted tones */
+  --muted: 25 12% 16%;
+  --muted-foreground: 42 20% 60%;
+
+  --accent: 42 78% 58%;
+  --accent-foreground: 25 20% 8%;
+
+  --destructive: 0 72% 55%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 25 12% 20%;
+  --input: 25 12% 20%;
+  --ring: 42 78% 58%;
+
+  --radius: 0.75rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}

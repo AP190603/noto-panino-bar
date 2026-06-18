@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Icon Background Remover</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #141208;
+      color: #e8dcc8;
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      gap: 20px;
+    }
+    h1 { color: #e1a930; font-size: 1.3rem; letter-spacing: .12em; text-transform: uppercase; }
+    p.sub { color: #9a8a6a; font-size: .85rem; text-align: center; max-width: 480px; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(225,169,48,.2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      width: 100%;
+      max-width: 640px;
+    }
+    label { font-size: .8rem; color: #b8a880; white-space: nowrap; }
+    input[type=range] { accent-color: #e1a930; width: 120px; cursor: pointer; }
+    span.val { color: #e1a930; font-weight: 600; min-width: 28px; display: inline-block; }
+
+    .btn {
+      background: #e1a930;
+      color: #141208;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn.secondary {
+      background: transparent;
+      color: #e1a930;
+      border: 1px solid #e1a930;
+    }
+    .btn:disabled { opacity: .35; cursor: default; }
+
+    .checkerboard {
+      background-image:
+        linear-gradient(45deg, #333 25%, transparent 25%),
+        linear-gradient(-45deg, #333 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #333 75%),
+        linear-gradient(-45deg, transparent 75%, #333 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      background-color: #1e1e1e;
+      border: 1px solid rgba(225,169,48,.25);
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    canvas {
+      display: block;
+      cursor: crosshair;
+      max-width: 100%;
+    }
+
+    .history-row {
+      display: flex;
+      gap: 8px;
+    }
+    .hint { font-size: .75rem; color: #6a5a3a; text-align: center; }
+
+    #drop-zone {
+      border: 2px dashed rgba(225,169,48,.4);
+      border-radius: 12px;
+      padding: 40px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      width: 100%;
+      max-width: 400px;
+    }
+    #drop-zone:hover, #drop-zone.dragover {
+      border-color: #e1a930;
+      background: rgba(225,169,48,.05);
+    }
+    #drop-zone p { color: #9a8a6a; font-size: .9rem; margin-top: 8px; }
+    #file-input { display: none; }
+
+    .mode-toggle {
+      display: flex;
+      gap: 0;
+      border: 1px solid rgba(225,169,48,.3);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mode-btn {
+      padding: 6px 14px;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #9a8a6a;
+      transition: background .15s, color .15s;
+    }
+    .mode-btn.active {
+      background: rgba(225,169,48,.2);
+      color: #e1a930;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Icon Background Remover</h1>
+<p class="sub">Upload a can or cup icon, click on any area to make it transparent. Use the tolerance slider to control how much colour variation gets removed.</p>
+
+<div id="drop-zone" onclick="document.getElementById('file-input').click()">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e1a930" stroke-width="1.5">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="17 8 12 3 7 8"/>
+    <line x1="12" y1="3" x2="12" y2="15"/>
+  </svg>
+  <p>Click or drag an image file here</p>
+  <input type="file" id="file-input" accept="image/*">
+</div>
+
+<div class="controls" id="controls" style="display:none">
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-remove" onclick="setMode('remove')">Remove (erase)</button>
+    <button class="mode-btn" id="mode-restore" onclick="setMode('restore')">Restore</button>
+  </div>
+
+  <label>Tolerance <input type="range" id="tolerance" min="0" max="100" value="30"> <span class="val" id="tol-val">30</span></label>
+
+  <div class="history-row">
+    <button class="btn secondary" id="undo-btn" onclick="undo()" disabled>↩ Undo</button>
+    <button class="btn secondary" onclick="resetImage()">Reset</button>
+  </div>
+
+  <button class="btn" onclick="downloadPNG()">⬇ Download PNG</button>
+</div>
+
+<div class="checkerboard" id="canvas-wrap" style="display:none">
+  <canvas id="canvas"></canvas>
+</div>
+<p class="hint" id="hint" style="display:none">Left-click: remove colour. Right-click: restore colour. Scroll to zoom.</p>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  let origImageData = null;
+  let currentImageData = null;
+  let history = [];
+  let mode = 'remove';
+
+  // Drag & drop
+  const dz = document.getElementById('drop-zone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); loadFile(e.dataTransfer.files[0]); });
+  document.getElementById('file-input').addEventListener('change', e => loadFile(e.target.files[0]));
+
+  function loadFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        const ratio = Math.min(MAX / w, MAX / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      canvas.width = w;
+      canvas.height = h;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      origImageData = ctx.getImageData(0, 0, w, h);
+      currentImageData = ctx.getImageData(0, 0, w, h);
+      history = [];
+      document.getElementById('undo-btn').disabled = true;
+      document.getElementById('drop-zone').style.display = 'none';
+      document.getElementById('controls').style.display = 'flex';
+      document.getElementById('canvas-wrap').style.display = 'block';
+      document.getElementById('hint').style.display = 'block';
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  const tolSlider = document.getElementById('tolerance');
+  const tolVal = document.getElementById('tol-val');
+  tolSlider.oninput = () => { tolVal.textContent = tolSlider.value; };
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('mode-remove').classList.toggle('active', m === 'remove');
+    document.getElementById('mode-restore').classList.toggle('active', m === 'restore');
+  }
+
+  canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('contextmenu', e => { e.preventDefault(); floodFill(e, 'restore'); });
+
+  function handleClick(e) {
+    floodFill(e, mode);
+  }
+
+  function getPixelCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: Math.floor((e.clientX - rect.left) * scaleX),
+      y: Math.floor((e.clientY - rect.top) * scaleY)
+    };
+  }
+
+  function floodFill(e, action) {
+    const { x, y } = getPixelCoords(e);
+    if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
+
+    // Push history snapshot
+    history.push(new ImageData(
+      new Uint8ClampedArray(currentImageData.data),
+      currentImageData.width,
+      currentImageData.height
+    ));
+    if (history.length > 30) history.shift();
+    document.getElementById('undo-btn').disabled = false;
+
+    const tol = parseInt(tolSlider.value) * 2.55;
+    const data = currentImageData.data;
+    const w = currentImageData.width;
+    const h = currentImageData.height;
+
+    const idx = (y * w + x) * 4;
+    const sr = data[idx], sg = data[idx+1], sb = data[idx+2], sa = data[idx+3];
+
+    const visited = new Uint8Array(w * h);
+    const stack = [x + y * w];
+    visited[x + y * w] = 1;
+
+    while (stack.length) {
+      const pos = stack.pop();
+      const px = pos % w;
+      const py = Math.floor(pos / w);
+      const i = pos * 4;
+
+      if (action === 'remove') {
+        data[i+3] = 0;
+      } else {
+        // Restore from original
+        const oi = i;
+        data[i]   = origImageData.data[oi];
+        data[i+1] = origImageData.data[oi+1];
+        data[i+2] = origImageData.data[oi+2];
+        data[i+3] = origImageData.data[oi+3];
+      }
+
+      const neighbors = [
+        px > 0     ? pos - 1 : -1,
+        px < w - 1 ? pos + 1 : -1,
+        py > 0     ? pos - w : -1,
+        py < h - 1 ? pos + w : -1
+      ];
+
+      for (const nb of neighbors) {
+        if (nb < 0 || visited[nb]) continue;
+        const ni = nb * 4;
+
+        let match;
+        if (action === 'remove') {
+          // match similar colour to seed
+          const dr = data[ni]   - sr;
+          const dg = data[ni+1] - sg;
+          const db = data[ni+2] - sb;
+          const da = data[ni+3] - sa;
+          match = Math.sqrt(dr*dr + dg*dg + db*db + da*da) <= tol && data[ni+3] > 0;
+        } else {
+          // restore: match pixels that are currently transparent/removed
+          match = data[ni+3] < 128;
+        }
+
+        if (match) {
+          visited[nb] = 1;
+          stack.push(nb);
+        }
+      }
+    }
+
+    ctx.putImageData(currentImageData, 0, 0);
+  }
+
+  function undo() {
+    if (!history.length) return;
+    currentImageData = history.pop();
+    ctx.putImageData(currentImageData, 0, 0);
+    document.getElementById('undo-btn').disabled = history.length === 0;
+  }
+
+  function resetImage() {
+    currentImageData = new ImageData(
+      new Uint8ClampedArray(origImageData.data),
+      origImageData.width,
+      origImageData.height
+    );
+    ctx.putImageData(currentImageData, 0, 0);
+    history = [];
+    document.getElementById('undo-btn').disabled = true;
+  }
+
+  function downloadPNG() {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'icon-edited.png';
+    a.click();
+  }
+</script>
+</body>
+</html>

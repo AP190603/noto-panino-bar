@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Noto Panino"
+version = "1.0.0"
+id = "artifacts/noto-panino"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 20344
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/noto-panino run dev"
+
+[services.env]
+PORT = "20344"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/noto-panino", "run", "build"]
+publicDir = "artifacts/noto-panino/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

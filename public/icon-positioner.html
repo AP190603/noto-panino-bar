@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Icon Position Tool — NOTO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: hsl(25 18% 5%);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 56px;
+    user-select: none;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    color: hsl(42 78% 58%);
+    font-size: 1.4rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .subtitle {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  /* ── Column preview ─────────────────────────────── */
+  .column {
+    width: 100%;
+    max-width: 360px;
+    background: hsl(25 18% 7%);
+    border: 1px solid rgba(240,196,106,0.14);
+    border-radius: 14px;
+    padding: 28px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: hsl(42 78% 58%);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  /* Heading */
+  .heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    line-height: 1.15;
+    color: #fff;
+  }
+  .heading span { color: hsl(42 78% 58%); }
+
+  /* Pricing bubbles */
+  .pricing-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .bubble-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+  .bubble-circle.filled {
+    width: 58px; height: 58px;
+    background: hsl(42 78% 58%);
+    color: hsl(25 18% 8%);
+  }
+  .bubble-circle.outline {
+    width: 58px; height: 58px;
+    background: rgba(240,196,106,0.12);
+    border: 1px solid rgba(240,196,106,0.3);
+    color: hsl(42 78% 58%);
+  }
+  .bubble-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* Menu */
+  .menu-section { display: flex; flex-direction: column; gap: 10px; }
+  .menu-cat {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .menu-cat.coffee { color: hsl(42 78% 58%); }
+  .menu-cat.tea { color: hsl(160 60% 55%); }
+  .menu-items-bold {
+    font-size: 0.85rem;
+    color: #fff;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .menu-items {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.5;
+  }
+
+  /* Extras */
+  .extras {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.28);
+  }
+
+  /* Feature tags */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(240,196,106,0.18);
+    color: rgba(255,255,255,0.3);
+    background: rgba(240,196,106,0.04);
+  }
+
+  /* ── Drag gap zone ──────────────────────────────── */
+  .gap-zone {
+    width: 100%;
+    max-width: 360px;
+    position: relative;
+    cursor: ns-resize;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .gap-line {
+    position: absolute;
+    left: 24px; right: 24px;
+    top: 50%;
+    height: 1px;
+    background: rgba(240,196,106,0.2);
+    border-radius: 1px;
+  }
+  .gap-handle {
+    position: relative;
+    z-index: 2;
+    background: rgba(240,196,106,0.12);
+    border: 1px solid rgba(240,196,106,0.35);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(240,196,106,0.7);
+    white-space: nowrap;
+    cursor: ns-resize;
+  }
+  .gap-handle:active { background: rgba(240,196,106,0.2); }
+
+  /* ── Icon group ─────────────────────────────────── */
+  .icon-group {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: hsl(25 18% 7%);
+    border: 1px solid rgba(240,196,106,0.14);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+  .icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    position: relative;
+  }
+  .icon-item img {
+    height: 64px;
+    width: auto;
+    opacity: 0.85;
+  }
+  .icon-label {
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(240,196,106,0.45);
+  }
+  .icon-glow {
+    position: absolute;
+    top: 30px; left: 50%;
+    transform: translateX(-50%);
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: rgba(240,196,106,0.18);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+  .noto-badge {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 13px;
+    border: 1.5px solid rgba(240,196,106,0.55);
+    border-radius: 5px;
+    min-width: 52px;
+  }
+  .noto-badge::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(240,196,106,0.22);
+    border-radius: 2px;
+  }
+  .noto-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    color: hsl(42 78% 58%);
+    opacity: 0.9;
+    line-height: 1;
+  }
+  .noto-est {
+    font-size: 0.3rem;
+    letter-spacing: 0.2em;
+    color: rgba(240,196,106,0.5);
+    text-transform: uppercase;
+    margin-top: 3px;
+    line-height: 1;
+  }
+
+  /* ── Readout ────────────────────────────────────── */
+  .readout {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 360px;
+    background: rgba(240,196,106,0.05);
+    border: 1px solid rgba(240,196,106,0.16);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .readout-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .readout-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+  .readout-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: hsl(42 78% 58%);
+    font-weight: 700;
+  }
+  .done-btn {
+    width: 100%;
+    padding: 12px;
+    background: hsl(42 78% 58%);
+    color: hsl(25 18% 8%);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .done-btn:hover { opacity: 0.85; }
+  .copy-msg {
+    text-align: center;
+    font-size: 0.7rem;
+    color: rgba(240,196,106,0.55);
+    display: none;
+    letter-spacing: 0.1em;
+  }
+  .copy-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<h1>Icon Position Tool</h1>
+<p class="subtitle">Drag the handle to set gap between menu &amp; icons</p>
+
+<!-- Static column content (mirrors real site) -->
+<div class="column">
+  <div>
+    <p class="section-label">Now Available</p>
+    <h2 class="heading">Try Your Iced<br />Drink <span>Canned!</span></h2>
+  </div>
+
+  <div class="pricing-row">
+    <div class="bubble">
+      <div class="bubble-circle filled">$9</div>
+      <span class="bubble-label">Signature<br />drinks</span>
+    </div>
+    <div class="bubble">
+      <div class="bubble-circle outline">$7</div>
+      <span class="bubble-label">All other<br />drinks</span>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <div>
+      <p class="menu-cat coffee">☕ Coffees</p>
+      <p class="menu-items-bold">Iced NOTO · Iced NOTOTRON <span style="color:rgba(255,255,255,0.3);font-size:0.75rem">(signatures)</span></p>
+      <p class="menu-items">Iced Latte · Iced Long Black · Iced Chai · Iced Chocolate · Iced Matcha</p>
+    </div>
+    <div>
+      <p class="menu-cat tea">🍃 Teas</p>
+      <p class="menu-items">Iced Peach · Iced Mango · Iced Lemon · Iced Pomegranate</p>
+    </div>
+  </div>
+
+  <p class="extras">Extras: Syrups +50¢ &nbsp;·&nbsp; Alt milks +50¢ &nbsp;·&nbsp; Extra shot +50¢</p>
+
+  <div class="tags">
+    <span class="tag">❄ Iced Fresh Daily</span>
+    <span class="tag">☕ Italian Espresso</span>
+    <span class="tag">🍃 Premium Teas</span>
+  </div>
+</div>
+
+<!-- Drag handle = controls gap between above and icons below -->
+<div class="gap-zone" id="gapZone" style="height: 32px; margin: 0;">
+  <div class="gap-line"></div>
+  <div class="gap-handle" id="handle">↕ drag gap</div>
+</div>
+
+<!-- Icons (static — position is controlled by gap above) -->
+<div class="icon-group">
+  <div class="icon-item">
+    <div class="icon-glow"></div>
+    <img src="/images/icon-can.png" alt="Can" />
+    <span class="icon-label">Canned</span>
+  </div>
+  <div class="icon-item">
+    <div class="noto-badge">
+      <span class="noto-name">NOTO</span>
+      <span class="noto-est">Est. 2024</span>
+    </div>
+  </div>
+  <div class="icon-item">
+    <div class="icon-glow"></div>
+    <img src="/images/icon-cup-togo.png" alt="Cup" />
+    <span class="icon-label">In a Cup</span>
+  </div>
+</div>
+
+<!-- Readout -->
+<div class="readout">
+  <div class="readout-row">
+    <span class="readout-label">Gap (margin-top)</span>
+    <span class="readout-value" id="valDisplay">32px</span>
+  </div>
+  <button class="done-btn" id="copyBtn">📋 Copy value — send to agent</button>
+  <div class="copy-msg" id="copyMsg">✓ Copied! Paste it in the chat above.</div>
+</div>
+
+<script>
+  const gapZone   = document.getElementById('gapZone');
+  const handle    = document.getElementById('handle');
+  const valDisplay = document.getElementById('valDisplay');
+  const copyBtn   = document.getElementById('copyBtn');
+  const copyMsg   = document.getElementById('copyMsg');
+
+  let gapPx = 32;
+  let dragging = false;
+  let startY = 0;
+  let startGap = 0;
+
+  function setGap(px) {
+    gapPx = Math.max(0, Math.min(400, px));
+    gapZone.style.height = gapPx + 'px';
+    valDisplay.textContent = gapPx + 'px';
+  }
+
+  handle.addEventListener('mousedown', (e) => {
+    dragging = true; startY = e.clientY; startGap = gapPx;
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    setGap(startGap + (e.clientY - startY));
+  });
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  handle.addEventListener('touchstart', (e) => {
+    dragging = true; startY = e.touches[0].clientY; startGap = gapPx;
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    setGap(startGap + (e.touches[0].clientY - startY));
+  });
+  window.addEventListener('touchend', () => { dragging = false; });
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(String(gapPx)).catch(() => {});
+    copyMsg.classList.add('show');
+    copyBtn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      copyMsg.classList.remove('show');
+      copyBtn.textContent = '📋 Copy value — send to agent';
+    }, 3000);
+  });
+</script>
+</body>
+</html>
